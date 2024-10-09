@@ -70,18 +70,21 @@ while True:
                     if message:
                         print(f"Received message from client: {client_id} - {message}")
 
-                        #store this message and get its id
+                        #store this message mark it as delivered to sender and get its id
                         message_id = store_message(client_id, message)
 
                         #now to send it to everyone online
 
+                        #####
                         #all online people
                         online_client_ids = get_online_client_ids()
-                        for client_id in online_client_ids:
+                        for online_id in online_client_ids:
                             #get their sockets and send it by getting the message from id
-                            online_sockets[client_id].send(message.encode())
-                            #mark the people that got it as delivered
-                            set_delivered_to(client_id, message_id)
+                            if online_id != client_id:
+                                online_sockets[online_id].send(message.encode())
+                                #mark the people that got it as delivered
+                                set_delivered_to(client_id, message_id)
+                        #####
 
                     else:
                         # Client disconnected
