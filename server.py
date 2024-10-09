@@ -115,14 +115,3 @@ while True:
     except Exception as e:
         print("SOMETHING IS BAD")
         print(e)
-
-
-
-
-"""
-fixes required
-1. need to make sure that the message i sent isnt sent back to me
-2. need to show who sent the message
-3. need to update the on_connect method so it gets the message_ids, messages, and the senders
-4. should update the other message method to do the same
-"""
