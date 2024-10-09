@@ -8,28 +8,37 @@ def client_program(client_name, host, port):
     client_socket.connect((host, port))
 
     while True:
+        try:
+            potential_sockets = [sys.stdin, client_socket]
+            readable, _, _ = select.select(potential_sockets, [], [])
 
-        potential_sockets = [sys.stdin, client_socket]
-
-        readable, _, _ = select.select(potential_sockets, [], [])
-
-        for s in readable:
-            # if we are getting a message to the socket
-            if s is client_socket:
-                message = client_socket.recv(1024).decode()
-                if not message:
-                    print("Server disconnected")
-                    return
+            for s in readable:
+                # if we are getting a message to the socket
+                if s is client_socket:
+                    message = client_socket.recv(1024).decode()
+                    if not message:
+                        print("Server disconnected")
+                        return
+                    else:
+                        print(message.strip())
                 else:
-                    print(message)
-                    print(f"{client_name}: ", end="", flush=True)
-            else:
-                message = input(f"{client_name}: ")
-                if message.lower() == "quit":
-                    print("Client disconnected")
-                    return
+                    sys.stdout.flush()
+                    sys.stdout.write(f"{client_name}: ")  # Print client prompt without newline
+                    message = input()  # Get user input without preprinted prompt in input()
+                    if message.lower() == "quit":
+                        print("Client disconnected")
+                        return
 
-                client_socket.send(message.encode())
+                    client_socket.send(message.encode())
+
+        except KeyboardInterrupt:
+            print("I guess I'll just die")
+            client_socket.close()
+            sys.exit(0)
+
+        except Exception as e:
+            print("SOMETHING IS BAD")
+            print(e)
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
@@ -37,5 +46,5 @@ if __name__ == "__main__":
     else:
         client_name = sys.argv[1]
         host = sys.argv[2]
-        port = sys.argv[3]
-        client_program()
+        port = int(sys.argv[3])
+        client_program(client_name, host, port)
