@@ -81,7 +81,7 @@ while True:
                         for online_id in online_client_ids:
                             #get their sockets and send it by getting the message from id
                             if online_id != client_id:
-                                online_sockets[online_id].send(message.encode())
+                                online_sockets[online_id].send((f"{client_id}: {message}").encode())
                                 #mark the people that got it as delivered
                                 set_delivered_to(client_id, message_id)
                         #####
