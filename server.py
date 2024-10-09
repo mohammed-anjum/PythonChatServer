@@ -53,7 +53,7 @@ while True:
                 #send the ones that didnt go through
                 for msg_id, sender_client_id, message in undelivered_message_info:
                     #send all und msg to the current client id
-                    online_sockets[client_id].send(f"{sender_client_id}: {message}")
+                    online_sockets[client_id].send((f"{sender_client_id}: {message}").encode())
                     #mark this as delivered for current client
                     set_delivered_to(msg_id, client_id)
 
