@@ -45,31 +45,31 @@ def on_connect(client_id):
 
     cursor.execute(
         '''
-        select distinct id from messages 
+        select distinct id, client_id, message from messages 
             where delivered_to is null
                 or delivered_to not like ?
         order by timestamp
         ''', (f'%{client_id}%',)
     )
-    undelivered_message_ids = cursor.fetchall()
+    undelivered_messages_info = cursor.fetchall()
     conn.close()
 
-    return [id[0] for id in undelivered_message_ids]
+    return undelivered_messages_info
 
 
-def get_message_from_message_id(message_id):
-    conn = sqlite3.connect('server.db')
-    cursor = conn.cursor()
-
-    cursor.execute(
-        '''
-        select message from messages where id = ?
-        ''', (message_id,)
-    )
-    message = cursor.fetchone()[0]
-    conn.close()
-
-    return message
+# def get_message_from_message_id(message_id):
+#     conn = sqlite3.connect('server.db')
+#     cursor = conn.cursor()
+#
+#     cursor.execute(
+#         '''
+#         select message from messages where id = ?
+#         ''', (message_id,)
+#     )
+#     message = cursor.fetchone()[0]
+#     conn.close()
+#
+#     return message
 
 #GOOD
 def on_disconnect(client_id):
@@ -139,7 +139,7 @@ def set_everyone_offline():
     conn.close()
 
 #GOOD
-def set_delivered_to(client_id, message_id):
+def set_delivered_to(message_id, client_id):
     conn = sqlite3.connect('server.db')
     cursor = conn.cursor()
 

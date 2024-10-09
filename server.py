@@ -48,12 +48,14 @@ while True:
                 online_sockets[client_id] = client_socket
 
                 #get undelivered_message_ids on_connect and store online status
-                undelivered_messages_ids = on_connect(client_id)
+                undelivered_message_info = on_connect(client_id)
 
                 #send the ones that didnt go through
-                for msg_id in undelivered_messages_ids:
-                    online_sockets[client_id].send(get_message_from_message_id(msg_id).encode())
-                    set_delivered_to(client_id, msg_id)
+                for msg_id, sender_client_id, message in undelivered_message_info:
+                    #send all und msg to the current client id
+                    online_sockets[client_id].send(f"{sender_client_id}: {message}")
+                    #mark this as delivered for current client
+                    set_delivered_to(msg_id, client_id)
 
                 #i am not sure if we need this tbh
                 inputs.append(client_socket)
