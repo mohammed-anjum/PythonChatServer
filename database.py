@@ -31,6 +31,11 @@ def initialize_db():
 ##################################
 ##################################
 
+'''
+CHANGE THIS TO JUST GET UNDELIVERED MESSAGES
+changes status to online
+gets undelivered messages
+'''
 def on_connect(client_id):
     conn = sqlite3.connect('server.db')
     cursor = conn.cursor()
@@ -57,22 +62,11 @@ def on_connect(client_id):
     return undelivered_messages_info
 
 #GOOD
-def on_disconnect(client_id):
-    conn = sqlite3.connect('server.db')
-    cursor = conn.cursor()
-
-    cursor.execute(
-        '''
-        update clients
-        set status="OFFLINE", last_seen=CURRENT_TIMESTAMP
-            where client_id=?
-        ''', (client_id,)
-    )
-    conn.commit()
-    conn.close()
-
-#GOOD
-#returns stored messages id
+'''
+stores message
+marks sender as delivered_to
+gets message id - important for marking delivered_to
+'''
 def store_message(client_id, message):
     conn = sqlite3.connect('server.db')
     cursor = conn.cursor()
@@ -94,6 +88,28 @@ def store_message(client_id, message):
     return message_id
 
 #GOOD
+def set_delivered_to(message_id, client_id):
+    conn = sqlite3.connect('server.db')
+    cursor = conn.cursor()
+
+    cursor.execute(
+        '''
+        update messages
+        set delivered_to = coalesce(delivered_to || ', ', '') || ?
+            where id = ?
+        ''', (client_id, message_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+
+
+
+#GOOD
+'''
+get all online client_ids
+'''
 def get_online_client_ids():
     conn = sqlite3.connect('server.db')
     cursor = conn.cursor()
@@ -110,6 +126,9 @@ def get_online_client_ids():
     return [client[0] for client in online_clients]
 
 #GOOD
+'''
+sets everyone offline
+'''
 def set_everyone_offline():
     conn = sqlite3.connect('server.db')
     cursor = conn.cursor()
@@ -123,21 +142,22 @@ def set_everyone_offline():
     conn.commit()
     conn.close()
 
-#GOOD
-def set_delivered_to(message_id, client_id):
+'''
+changes status to offline
+'''
+def on_disconnect(client_id):
     conn = sqlite3.connect('server.db')
     cursor = conn.cursor()
 
     cursor.execute(
         '''
-        update messages
-        set delivered_to = coalesce(delivered_to || ', ', '') || ?
-            where id = ?
-        ''', (client_id, message_id)
+        update clients
+        set status="OFFLINE", last_seen=CURRENT_TIMESTAMP
+            where client_id=?
+        ''', (client_id,)
     )
     conn.commit()
     conn.close()
-
 
 # Call this function when the module is run directly
 if __name__ == '__main__':

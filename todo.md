@@ -15,16 +15,4 @@ last. that name interweave issue
 3. see how sockets can be saved 
    1. i guess my online_sockets need to be writable
 4. clean up code accordingly
-
-
-# online sockets
-writeable = [
-
-socket1,
-socket2,
-socket3
-
-]
-
-# online ids
-get_online_client_ids() = 
+5. update the clients table to have names

@@ -17,94 +17,123 @@ local_server_socket.bind(('localhost', 12345))
 local_server_socket.listen(5)  # Start listening for connections
 print(f"Listening on localhost: 127.0.0.1:12345")
 
+#this is where the server will read from
+the_readable = [server_socket, local_server_socket]
+
+#this is what the server will write to
+the_writable = []
+#a dictionary to hold socket = [messages]
+messages_to_send = {}
+
 #a dictionary to hold client_id = socket
 online_sockets= {}
-#this is what needs to be read
-the_readables = [server_socket, local_server_socket]
 
 while True:
     try:
-        # Monitor sockets for readability
-        readable, _, _ = select.select(the_readables, [], [])
+        # SELECT
+        readable, writable, _ = select.select(the_readable, the_writable, [])
 
         for s in readable:
-
+            #here we establish connections
             if s is server_socket or s is local_server_socket:
 
                 #connect via TCP
                 client_socket, address = s.accept()
                 client_socket.setblocking(False)
-
                 #make unique client id
                 client_id = f"{address[0]}:{address[1]}"
-                # announce it
                 print(f"Client {client_id} connected")
 
-                #store socket so you can write to it later
+                #HERE WE ARE KEEPING TRACK OF STATE
+                #add the client so we can read from them in the else statement
+                if client_socket not in the_readable:
+                    the_readable.append(client_socket)
+                #assosiate the socket with the id
                 online_sockets[client_id] = client_socket
 
-                #on_connect
-                #   update online status
-                #   get undelivered_message_ids
+                #now we keep track of messages to send
+                messages_to_send[client_socket] = []
+                #get undelivered_message_ids
                 undelivered_message_info = on_connect(client_id)
-
-                #send the ones that didnt go through
+                # queue up messages here
                 for msg_id, sender_client_id, message in undelivered_message_info:
-                    #send all und msg to the current client id
-                    online_sockets[client_id].send((f"{sender_client_id}: {message}").encode())
-                    #mark this as delivered for current client
-                    set_delivered_to(msg_id, client_id)
+                    messages_to_send[client_socket].append([msg_id, sender_client_id, message])
 
-                #append your readables to have the client socket
-                the_readables.append(client_socket)
+                # also add it in writables
+                if client_socket not in the_writable:
+                    the_writable.append(client_socket)
 
+
+
+
+
+
+
+
+            #here we get data
             else:
                 try:
                     #receive a message if any
                     message = s.recv(1024).decode()
                     #keep client id handy
-                    client_id = f"{s.getpeername()[0]}:{s.getpeername()[1]}"
+                    sender_client_id = f"{s.getpeername()[0]}:{s.getpeername()[1]}"
 
                     if message:
-                        print(f"Received message from client: {client_id} - {message}")
+                        print(f"Received message from client: {sender_client_id} - {message}")
 
                         #store this message
                         #   mark it as delivered to sender
                         #   get its id
-                        message_id = store_message(client_id, message)
+                        msg_id = store_message(sender_client_id, message)
 
+                        #queue up the message to send
+                        for online_client_id in online_sockets:
+                            #don't send it to the sender again
+                            if online_client_id != sender_client_id:
+                                messages_to_send[online_sockets[online_client_id]].append([msg_id, sender_client_id, message])
 
-                        #now send it to everyone online
-                        #get all onliners
-                        online_client_ids = get_online_client_ids()
-                        for online_id in online_client_ids:
-                            #get their sockets and send it by getting the message from id
-                            if online_id != client_id:
-                                online_sockets[online_id].send((f"{client_id}: {message}").encode())
-                                #mark the people that got it as delivered
-                                set_delivered_to(client_id, message_id)
+                                #if exception removes the socket from writables
+                                if online_sockets[online_client_id] not in the_writable:
+                                    the_writable.append(online_sockets[online_client_id])
 
                     # Client disconnected
                     else:
-                        #remove offline socket
-                        del online_sockets[client_id]
-                        #set client to offline
-                        on_disconnect(client_id)
-                        print(f"Client disconnected")
-                        #remove readable socket
-                        the_readables.remove(s)
-                        #close select statement
+                        print(f"{sender_client_id} disconnected")
+                        #remove socket from readable
+                        the_readable.remove(s)
+                        #remove socket from writable
+                        if s in the_writable:
+                            the_writable.remove(s)
+                        #close socket
                         s.close()
 
                 except Exception as e:
                     print(f"Error receiving data from client: {e}")
-                    # set_everyone_offline() # i dont think this should be here
-                    the_readables.remove(s)
+                    #since we cannot receive data we should remove em
+                    the_writable.remove(s)
                     s.close()
 
-        #for s in writeable
-            #try:
-            #except Exception as e:
+        #now we write and mark as delivered in database
+        for s in writable:
+            try:
+
+                receiver_client_id = f"{s.getpeername()[0]}:{s.getpeername()[1]}"
+
+                #if we have messages
+                if messages_to_send[s]:
+
+                    #[[id, sender, message]]
+                    oldest_msg_info = messages_to_send[s].pop(0)
+
+
+                    s.send(f"{oldest_msg_info[1]}: {oldest_msg_info[2]}")
+                    set_delivered_to(oldest_msg_info[0], receiver_client_id)
+
+            except Exception as e:
+                print(f"Error sending data to client: {e}")
+                # since we cannot send data we should remove em
+                the_readable.remove(s)
+                s.close()
 
     except KeyboardInterrupt:
         print("I guess I'll just die")
