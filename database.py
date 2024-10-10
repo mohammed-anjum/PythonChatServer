@@ -56,21 +56,6 @@ def on_connect(client_id):
 
     return undelivered_messages_info
 
-
-# def get_message_from_message_id(message_id):
-#     conn = sqlite3.connect('server.db')
-#     cursor = conn.cursor()
-#
-#     cursor.execute(
-#         '''
-#         select message from messages where id = ?
-#         ''', (message_id,)
-#     )
-#     message = cursor.fetchone()[0]
-#     conn.close()
-#
-#     return message
-
 #GOOD
 def on_disconnect(client_id):
     conn = sqlite3.connect('server.db')
