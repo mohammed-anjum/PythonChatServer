@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# magic that will kill our children when the script exits
+trap "kill 0" EXIT
+
+for thing in `seq 1 2`
+do
+ping cs.umanitoba.ca &
+done
+
+wait # waits for detached terminals to quit
+# Press ctrl-c to kill this, which will also kill the
+# detached terminals
+
+echo done
+

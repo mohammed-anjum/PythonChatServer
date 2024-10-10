@@ -16,3 +16,15 @@ last. that name interweave issue
    1. i guess my online_sockets need to be writable
 4. clean up code accordingly
 5. update the clients table to have names
+
+
+1. Check for graceful quits and quit messages
+   1. Check on client side
+   2. Check on server side
+2. for the testing
+   1. create a method t make random string
+   2. create a method to sleep for somewhere in between 0.5 to 1.5 seconds
+   3. then make method send the message
+   4. run for 5 minutes
+   5. client should count successful sends
+   6. server should count successful receives
