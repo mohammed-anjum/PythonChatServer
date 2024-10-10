@@ -99,7 +99,6 @@ while True:
                 except Exception as e:
                     print(f"Error receiving data from client: {e}")
                     # Clean up the socket on error
-                    # if s in the_readable:
                     the_readable.remove(s)
                     if s in the_writable:
                         the_writable.remove(s)
@@ -121,17 +120,22 @@ while True:
                     set_delivered_to(oldest_msg_info[0], receiver_client_id)
 
                 if not messages_to_send[s]:
-                    the_readable.remove(s)
+                    the_writable.remove(s)
 
             except Exception as e:
                 print(f"Error sending data to client: {e}")
-                # Clean up the socket on error
-                # if s in the_readable:
-                #     the_readable.remove(s)
-                # if s in the_writable:
                 the_writable.remove(s)
                 online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
                 s.close()
+
+        ### could potentially add this, will have to update select statement with the readables
+        # for s in exceptional:
+        #     print(f"Handling exception for {s.getpeername()}")
+        #     inputs.remove(s)
+        #     if s in outputs:
+        #         outputs.remove(s)
+        #     s.close()
+
 
     except KeyboardInterrupt:
         print("I guess I'll just die")

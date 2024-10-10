@@ -25,11 +25,9 @@ def client_program(client_name, host, port):
                         return
                     else:
                         print(message.strip())
-                        print(f"{client_name}: ", end="", flush=True)
                 else:
-                    sys.stdout.flush()
-                    sys.stdout.write(f"{client_name}: ")  # Print client prompt without newline
-                    message = input()  # Get user input without preprinted prompt in input()
+                    # sys.stdout.flush()
+                    message = input(f"{client_name}: ")  # Get user input without preprinted prompt in input()
                     if message.lower() == "quit":
                         print("Client disconnected")
                         return
