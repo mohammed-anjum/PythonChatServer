@@ -61,8 +61,8 @@ while True:
                 for msg_id, sender_client_id, message in undelivered_message_info:
                     messages_to_send[client_socket].append([msg_id, sender_client_id, message])
 
-                # Add it to writables
-                the_writable.append(client_socket)
+                if client_socket not in the_writable:
+                    the_writable.append(client_socket)
 
             # Here we handle incoming data
             else:
@@ -89,21 +89,20 @@ while True:
                     # Handle client disconnects
                     else:
                         print(f"{sender_client_id} disconnected")
-                        online_sockets.pop(sender_client_id, None)
-                        if s in the_readable:
-                            the_readable.remove(s)
+                        # if s in the_readable:
+                        the_readable.remove(s)
                         if s in the_writable:
                             the_writable.remove(s)
-
+                        online_sockets.pop(sender_client_id, None)
                         s.close()
 
                 except Exception as e:
                     print(f"Error receiving data from client: {e}")
                     # Clean up the socket on error
+                    # if s in the_readable:
+                    the_readable.remove(s)
                     if s in the_writable:
                         the_writable.remove(s)
-                    if s in the_readable:
-                        the_readable.remove(s)
                     online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
                     s.close()
 
@@ -121,13 +120,16 @@ while True:
                     # Mark message as delivered
                     set_delivered_to(oldest_msg_info[0], receiver_client_id)
 
+                if not messages_to_send[s]:
+                    the_readable.remove(s)
+
             except Exception as e:
                 print(f"Error sending data to client: {e}")
                 # Clean up the socket on error
-                if s in the_readable:
-                    the_readable.remove(s)
-                if s in the_writable:
-                    the_writable.remove(s)
+                # if s in the_readable:
+                #     the_readable.remove(s)
+                # if s in the_writable:
+                the_writable.remove(s)
                 online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
                 s.close()
 
