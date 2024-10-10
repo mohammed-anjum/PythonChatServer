@@ -63,13 +63,6 @@ while True:
                 if client_socket not in the_writable:
                     the_writable.append(client_socket)
 
-
-
-
-
-
-
-
             #here we get data
             else:
                 try:
@@ -106,17 +99,20 @@ while True:
                     else:
                         print(f"{sender_client_id} disconnected")
                         #remove socket from readable
-                        the_readable.remove(s)
+                        if s in the_readable:
+                            the_readable.remove(s)
                         #remove socket from writable
                         if s in the_writable:
                             the_writable.remove(s)
+                        online_sockets.pop(sender_client_id, None)
                         #close socket
                         s.close()
 
                 except Exception as e:
                     print(f"Error receiving data from client: {e}")
                     #since we cannot receive data we should remove em
-                    the_writable.remove(s)
+                    if s in the_writable:
+                        the_writable.remove(s)
                     s.close()
 
         #now we write and mark as delivered in database
@@ -138,7 +134,9 @@ while True:
             except Exception as e:
                 print(f"Error sending data to client: {e}")
                 # since we cannot send data we should remove em
-                the_readable.remove(s)
+                if s in the_readable:
+                    the_readable.remove(s)
+                online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
                 s.close()
 
     except KeyboardInterrupt:

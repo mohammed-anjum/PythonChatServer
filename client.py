@@ -25,6 +25,7 @@ def client_program(client_name, host, port):
                         return
                     else:
                         print(message.strip())
+                        print(f"{client_name}: ", end="", flush=True)
                 else:
                     sys.stdout.flush()
                     sys.stdout.write(f"{client_name}: ")  # Print client prompt without newline
