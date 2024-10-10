@@ -86,10 +86,16 @@ while True:
                         #   get its id
                         msg_id = store_message(sender_client_id, message)
 
+
                         #queue up the message to send
                         for online_client_id in online_sockets:
                             #don't send it to the sender again
                             if online_client_id != sender_client_id:
+
+                                #making sure its arrays
+                                if online_sockets[online_client_id] not in messages_to_send:
+                                    messages_to_send[online_sockets[online_client_id]] = []
+
                                 messages_to_send[online_sockets[online_client_id]].append([msg_id, sender_client_id, message])
 
                                 #if exception removes the socket from writables
