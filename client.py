@@ -2,14 +2,34 @@ import socket
 import sys
 import select
 
+
+def print_server_message(message, current_input):
+    # Move the cursor to the beginning of the line
+    sys.stdout.write('\r')
+
+    # Clear the current line from the cursor to the end
+    sys.stdout.write('\033[K')
+
+    # Print the incoming message from the server on a new line
+    print(message.strip())
+
+    # Reprint the user's current input so they can continue typing
+    sys.stdout.write(f"{current_input}")
+
+    # Flush to make sure it shows up in the terminal immediately
+    sys.stdout.flush()
+
+
 def client_program(client_name, host, port):
+
+    current_input = ""
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
-    #send the name in a unique way so server can record it
-    name_const = "نام"
-    client_socket.send(f"{name_const} - {client_name}".encode())
+    # #send the name in a unique way so server can record it
+    # name_const = "نام"
+    # client_socket.send(f"{name_const} - {client_name}".encode())
 
     while True:
         try:
@@ -24,14 +44,14 @@ def client_program(client_name, host, port):
                         print("Server disconnected")
                         return
                     else:
-                        print(message.strip())
+                        print_server_message(message, current_input)
                 else:
-                    message = input(f"{client_name}: ")  # Get user input without preprinted prompt in input()
-                    if message.lower() == "quit":
+                    current_input = input(f"{client_name}: ")  # Get user input without preprinted prompt in input()
+                    if current_input.lower() == "quit":
                         print("Client disconnected")
                         return
 
-                    client_socket.send(message.encode())
+                    client_socket.send(current_input.encode())
 
         except KeyboardInterrupt:
             print("I guess I'll just die")
