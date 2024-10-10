@@ -132,7 +132,7 @@ while True:
                     oldest_msg_info = messages_to_send[s].pop(0)
 
 
-                    s.send(f"{oldest_msg_info[1]}: {oldest_msg_info[2]}")
+                    s.send(f"{oldest_msg_info[1]}: {oldest_msg_info[2]}".encode())
                     set_delivered_to(oldest_msg_info[0], receiver_client_id)
 
             except Exception as e:
