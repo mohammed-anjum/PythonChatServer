@@ -7,9 +7,9 @@ def client_program(client_name, host, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
-    # #send the name in a unique way so server can record it
-    # name_const = "نام"
-    # client_socket.send(f"{name_const} - {client_name}".encode())
+    #send the name in a unique way so server can record it
+    name_const = "نام"
+    client_socket.send(f"{name_const} - {client_name}".encode())
 
     while True:
         try:
@@ -26,7 +26,6 @@ def client_program(client_name, host, port):
                     else:
                         print(message.strip())
                 else:
-                    # sys.stdout.flush()
                     message = input(f"{client_name}: ")  # Get user input without preprinted prompt in input()
                     if message.lower() == "quit":
                         print("Client disconnected")
@@ -35,7 +34,7 @@ def client_program(client_name, host, port):
                     client_socket.send(message.encode())
 
         except KeyboardInterrupt:
-            # print("I guess I'll just die")
+            print("I guess I'll just die")
             client_socket.close()
             sys.exit(0)
 
