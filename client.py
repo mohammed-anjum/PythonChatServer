@@ -37,7 +37,7 @@ def client_program(client_name, host, port):
                     client_socket.send(message.encode())
 
         except KeyboardInterrupt:
-            print("I guess I'll just die")
+            # print("I guess I'll just die")
             client_socket.close()
             sys.exit(0)
 
