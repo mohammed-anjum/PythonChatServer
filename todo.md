@@ -19,8 +19,8 @@ last. that name interweave issue
 
 
 1. Check for graceful quits and quit messages
-   1. Check on client side
-   2. Check on server side
+   1. Check on client side GOOD
+   2. Check on server side GOOD
 2. for the testing
    1. create a method t make random string
    2. create a method to sleep for somewhere in between 0.5 to 1.5 seconds
@@ -28,3 +28,5 @@ last. that name interweave issue
    4. run for 5 minutes
    5. client should count successful sends
    6. server should count successful receives
+3. fix all print messages
+4. retain name sent as username in database
