@@ -7,6 +7,10 @@ def client_program(client_name, host, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
 
+    # #send the name in a unique way so server can record it
+    # name_const = "نام"
+    # client_socket.send(f"{name_const} - {client_name}".encode())
+
     while True:
         try:
             potential_sockets = [sys.stdin, client_socket]

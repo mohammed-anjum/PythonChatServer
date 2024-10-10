@@ -38,6 +38,12 @@ while True:
                 client_socket, address = s.accept()
                 client_socket.setblocking(False)
 
+                # name_const = "نام"
+                # name_msg = client_socket.recv(1024).decode()
+                # if name_msg.startswith(name_const):
+
+
+
                 #make unique id
                 client_id = f"{address[0]}:{address[1]}"
 
@@ -115,3 +121,16 @@ while True:
     except Exception as e:
         print("SOMETHING IS BAD")
         print(e)
+
+
+
+'''
+1. a name sender
+2. update client table to record name
+3. update db to have a method to retrieve name
+4. check with gpt if it is better in big o to return multiple things rather just one
+5. add the name string to the last message received from server
+6. scripts to ceate multiple clients
+7. box plot to show the lines etc
+last. that name interweave issue
+'''
