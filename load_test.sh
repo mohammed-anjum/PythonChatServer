@@ -3,9 +3,9 @@
 # magic that will kill our children when the script exits
 trap "kill 0" EXIT
 
-for thing in {1..200}
+for thing in {1..2}
 do
-    python3 client.py "client_$i" localhost 11111 &
+    python3 client.py "client_$thing" localhost 12345 &
 done
 
 wait # waits for detached terminals to quit

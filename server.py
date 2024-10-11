@@ -119,7 +119,8 @@ def server_program(test):
                     except Exception as e:
                         print(f"Error receiving data from client: {e}")
                         # Clean up the socket on error
-                        the_readable.remove(s)
+                        if s in the_readable:
+                            the_readable.remove(s)
                         if s in the_writable:
                             the_writable.remove(s)
                         online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
@@ -143,11 +144,13 @@ def server_program(test):
                         set_delivered_to(oldest_msg_info[0], receiver_client_id)
 
                     if not messages_to_send[s]:
-                        the_writable.remove(s)
+                        if s in the_writable:
+                            the_writable.remove(s)
 
                 except Exception as e:
                     print(f"Error sending data to client: {e}")
-                    the_writable.remove(s)
+                    if s in the_writable:
+                        the_writable.remove(s)
                     online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
                     s.close()
 
