@@ -7,13 +7,17 @@ import time
 
 
 def print_server_message(message, current_input):
-    sys.stdout.write('\r')  # move cursor all the way back
+    sys.stdout.write('\r')  # Move cursor back to the start
     sys.stdout.write('\033[K')  # Clear the current line
+
+    # Print server message, ensuring it's properly formatted
     if not message.endswith('\n'):
         message += '\n'
-    print(message.strip())  # print server's message
-    sys.stdout.write(f"{current_input}")  # reprint what I was typing
-    sys.stdout.flush()  # Flush to make sure it shows up in the terminal immediately
+    sys.stdout.write(message.strip() + '\n')  # Print the server message
+
+    # Reprint the user input
+    sys.stdout.write(f"{current_input}")
+    sys.stdout.flush()  # Ensure the output appears immediately
 
 
 def send_automated_message(client_socket):
