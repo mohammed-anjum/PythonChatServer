@@ -5,21 +5,6 @@ import sys
 import select
 import time
 
-
-def print_server_message(message, current_input):
-    sys.stdout.write('\r')  # Move cursor back to the start
-    sys.stdout.write('\033[K')  # Clear the current line
-
-    # Print server message, ensuring it's properly formatted
-    if not message.endswith('\n'):
-        message += '\n'
-    sys.stdout.write(message.strip() + '\n')  # Print the server message
-
-    # Reprint the user input
-    sys.stdout.write(f"{current_input}")
-    sys.stdout.flush()  # Ensure the output appears immediately
-
-
 def send_automated_message(client_socket):
     time.sleep(random.uniform(0.5, 1.5))  # random interval
     random_word = ''.join(random.choices(string.ascii_letters, k=10))  # random message
@@ -51,7 +36,7 @@ def client_program(client_name, host, port, test):
                             print("Server disconnected")
                             return
                         else:
-                            print_server_message(message, current_input)
+                            print(message)
                     else:
                         current_input = input(f"{client_name}: ")  # Get user input
                         if current_input.lower() == "quit":
