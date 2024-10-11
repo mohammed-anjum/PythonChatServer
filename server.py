@@ -4,6 +4,52 @@ import sys
 
 from database import *
 
+
+def handle_handshake(client_socket, client_port_host, handshake_str, online_sockets):
+    # Check if the socket is already in the online_sockets dict
+    if client_socket in online_sockets:
+        print(f"Socket {client_port_host} is already connected with ID: {online_sockets[client_socket]}")
+        return None  # Immediately exit as the handshake has already been done
+
+    try:
+        # Initially, set the socket to non-blocking to receive the first part of the message
+        client_socket.setblocking(False)
+
+        # Try to receive a message from the client
+        handshake_message = client_socket.recv(1024).decode().strip()
+
+        # Check if the handshake string is present in the message
+        if handshake_str in handshake_message:
+            # If it's a handshake message, temporarily switch to blocking mode
+            client_socket.setblocking(True)
+
+            # Extract client name from the handshake message
+            client_name = handshake_message.split("-")[-1].strip()
+            if client_name:
+                client_id = client_name
+            else:
+                client_id = client_port_host
+
+            # Add the client socket and ID to online_sockets
+            online_sockets[client_socket] = client_id
+            print(f"Handshake completed with client: {client_id}")
+            return client_id
+        else:
+            # If not a handshake message, return immediately and don't block
+            print(f"Received a normal message, not a handshake, from {client_port_host}")
+            return None
+
+    except Exception as e:
+        print(f"Error during handshake with {client_port_host}: {e}")
+        client_socket.close()
+        return None
+
+    finally:
+        # Set the socket back to non-blocking mode after the handshake or normal message
+        client_socket.setblocking(False)
+
+
+
 def server_program(test):
     initialize_db()
 
@@ -41,25 +87,8 @@ def server_program(test):
 
                     #default client id
                     client_port_host = f"{address[0]}:{address[1]}"
-                    client_id = client_port_host
 
-                    try:
-                        handshake_message = client_socket.recv(1024).decode().strip()
-                        if handshake_str in handshake_message:
-                            client_name = handshake_message.split("-")[-1].strip()
-                            if client_name:
-                                client_id = client_name
-                            print(f"Handshake completed with client: {client_id}")
-                        else:
-                            raise ValueError("Invalid handshake message")
-                    except Exception as e:
-                        print(f"Error during handshake with {client_port_host}: {e}")
-                        client_socket.close()
-                        continue
-                    finally:
-                        # Set back to non-blocking mode after the handshake
-                        client_socket.setblocking(False)
-
+                    client_id = handle_handshake(client_socket, client_port_host, handshake_str, online_sockets)
 
                     if test:
                         print(f"Client {client_id} connected and is testing me")
