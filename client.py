@@ -55,13 +55,11 @@ def client_program(client_name, host, port, test):
                             return
                         client_socket.send(current_input.encode())
 
+
+
             #testing phase
             else:
                 elapsed_time = time.time() - start_time
-                if elapsed_time > 300:
-                    client_socket.send(f"I sent you {count_sent_messages} messages in 5 minutes!\nGoodBye".encode())
-                    client_socket.close()
-                    return
 
                 potential_sockets = [client_socket]
                 readable, _, _ = select.select(potential_sockets, [], [], 0)  # non-blocking select
@@ -73,9 +71,15 @@ def client_program(client_name, host, port, test):
                         return
                     else:
                         print_server_message(message, current_input)
-                #Send automated messages at random intervals
-                send_automated_message(client_socket)
-                count_sent_messages += 1
+
+                if elapsed_time <= 300: #to stop the last lingering message
+                    #Send automated messages at random intervals
+                    send_automated_message(client_socket)
+                    count_sent_messages += 1
+                else:
+                    client_socket.send(f"I sent you {count_sent_messages} messages in 5 minutes! *_*".encode())
+                    client_socket.close()
+                    return
 
         except KeyboardInterrupt:
             print("I guess I'll just die")
