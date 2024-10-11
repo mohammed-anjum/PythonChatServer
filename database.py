@@ -15,38 +15,14 @@ def initialize_db():
     )
     ''')
 
-    # Create the clients table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS clients (
-        client_id TEXT PRIMARY KEY,
-        status TEXT NOT NULL,
-        last_seen DATETIME
-    )
-    ''')
-
-    conn.commit()
-    conn.close()
-
 ##################################
 ##################################
 ##################################
 
-'''
-CHANGE THIS TO JUST GET UNDELIVERED MESSAGES
-changes status to online
-gets undelivered messages
-'''
-def on_connect(client_id):
+
+def get_undelivered_messages(client_id):
     conn = sqlite3.connect('server.db')
     cursor = conn.cursor()
-
-    cursor.execute(
-        '''
-        insert into clients (client_id, status, last_seen)
-        values(?, "ONLINE", CURRENT_TIMESTAMP)
-        ''', (client_id,)
-    )
-    conn.commit()
 
     cursor.execute(
         '''
@@ -98,63 +74,6 @@ def set_delivered_to(message_id, client_id):
         set delivered_to = coalesce(delivered_to || ', ', '') || ?
             where id = ?
         ''', (client_id, message_id)
-    )
-    conn.commit()
-    conn.close()
-
-
-
-
-
-#GOOD
-'''
-get all online client_ids
-'''
-def get_online_client_ids():
-    conn = sqlite3.connect('server.db')
-    cursor = conn.cursor()
-
-    cursor.execute(
-        '''
-        select client_id from clients
-            where status="ONLINE"
-        '''
-    )
-    online_clients = cursor.fetchall()
-    conn.close()
-
-    return [client[0] for client in online_clients]
-
-#GOOD
-'''
-sets everyone offline
-'''
-def set_everyone_offline():
-    conn = sqlite3.connect('server.db')
-    cursor = conn.cursor()
-
-    cursor.execute(
-        '''
-        update clients
-        set status = "OFFLINE", last_seen=CURRENT_TIMESTAMP
-        '''
-    )
-    conn.commit()
-    conn.close()
-
-'''
-changes status to offline
-'''
-def on_disconnect(client_id):
-    conn = sqlite3.connect('server.db')
-    cursor = conn.cursor()
-
-    cursor.execute(
-        '''
-        update clients
-        set status="OFFLINE", last_seen=CURRENT_TIMESTAMP
-            where client_id=?
-        ''', (client_id,)
     )
     conn.commit()
     conn.close()

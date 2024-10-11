@@ -10,6 +10,7 @@ def server_program(test):
     if test:
         print("Server is in test mode")
 
+    handshake_str = "_*_"
     count_received_messages = 0
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,17 +39,38 @@ def server_program(test):
                     client_socket, address = s.accept()
                     client_socket.setblocking(False)
 
-                    client_id = f"{address[0]}:{address[1]}"
+                    #default client id
+                    client_port_host = f"{address[0]}:{address[1]}"
+                    client_id = client_port_host
+
+                    try:
+                        handshake_message = client_socket.recv(1024).decode().strip()
+                        if handshake_str in handshake_message:
+                            client_name = handshake_message.split("-")[-1].strip()
+                            if client_name:
+                                client_id = client_name
+                            print(f"Handshake completed with client: {client_id}")
+                        else:
+                            raise ValueError("Invalid handshake message")
+                    except Exception as e:
+                        print(f"Error during handshake with {client_port_host}: {e}")
+                        client_socket.close()
+                        continue
+                    finally:
+                        # Set back to non-blocking mode after the handshake
+                        client_socket.setblocking(False)
+
+
                     if test:
                         print(f"Client {client_id} connected and is testing me")
                     else:
                         print(f"Client {client_id} connected")
 
                     the_readable.append(client_socket)
-                    online_sockets[client_id] = client_socket
+                    online_sockets[client_socket] = client_id
                     messages_to_send[client_socket] = []
 
-                    undelivered_message_info = on_connect(client_id)
+                    undelivered_message_info = get_undelivered_messages(client_id)
 
                     if test:
                         undelivered_message_info = undelivered_message_info[-20:]
@@ -62,7 +84,7 @@ def server_program(test):
                 else:
                     try:
                         message = s.recv(1024).decode()
-                        sender_client_id = f"{s.getpeername()[0]}:{s.getpeername()[1]}"
+                        sender_client_id = online_sockets[s]
 
                         if message:
                             if test:
@@ -75,7 +97,7 @@ def server_program(test):
 
                             msg_id = store_message(sender_client_id, message)
 
-                            for online_client_id, client_socket in online_sockets.items():
+                            for client_socket, online_client_id in online_sockets.items():
                                 if online_client_id != sender_client_id:
                                     if client_socket not in messages_to_send:
                                         messages_to_send[client_socket] = []
@@ -90,7 +112,7 @@ def server_program(test):
                                 the_readable.remove(s)
                             if s in the_writable:
                                 the_writable.remove(s)
-                            online_sockets.pop(sender_client_id, None)
+                            online_sockets.pop(s, None)
                             messages_to_send.pop(s, None)
                             s.close()
 
@@ -100,7 +122,7 @@ def server_program(test):
                             the_readable.remove(s)
                         if s in the_writable:
                             the_writable.remove(s)
-                        online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
+                        online_sockets.pop(s, None)
                         messages_to_send.pop(s, None)
                         s.close()
 
@@ -110,7 +132,7 @@ def server_program(test):
             # Handle sending messages to writable clients
             for s in writable:
                 try:
-                    receiver_client_id = f"{s.getpeername()[0]}:{s.getpeername()[1]}"
+                    receiver_client_id = online_sockets[s]
 
                     if messages_to_send.get(s):
                         oldest_msg_info = messages_to_send[s].pop(0)
@@ -125,13 +147,13 @@ def server_program(test):
                     print(f"Error sending data to client: {e}")
                     if s in the_writable:
                         the_writable.remove(s)
-                    online_sockets.pop(f"{s.getpeername()[0]}:{s.getpeername()[1]}", None)
+                    online_sockets.pop(s, None)
                     messages_to_send.pop(s, None)
                     s.close()
 
         except KeyboardInterrupt:
             print("I guess I'll just die")
-            set_everyone_offline()
+            online_sockets = {}
             server_socket.close()
             local_server_socket.close()
             sys.exit(0)
