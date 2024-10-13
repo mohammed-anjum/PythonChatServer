@@ -5,6 +5,7 @@ import sys
 import select
 import time
 
+#helper method to send a randomized string  at a random interval
 def send_automated_message(client_socket):
     time.sleep(random.uniform(0.5, 1.5))  # random interval
     random_word = ''.join(random.choices(string.ascii_letters, k=10))  # random message
@@ -44,9 +45,6 @@ def client_program(client_name, host, port, test):
                             return
                         client_socket.send(current_input.encode())
 
-
-
-            #testing phase
             else:
                 elapsed_time = time.time() - start_time
 
@@ -59,13 +57,14 @@ def client_program(client_name, host, port, test):
                         print("Server disconnected")
                         return
                     else:
-                        print_server_message(message, current_input)
+                        print(message)
 
+                # in testing phase we test for 5 min
                 if elapsed_time <= 300: #to stop the last lingering message
-                    #Send automated messages at random intervals
                     send_automated_message(client_socket)
                     count_sent_messages += 1
                 else:
+                    # a unique string to denote the final message by client
                     client_socket.send(f"I sent you {count_sent_messages} messages in 5 minutes! *_*".encode())
                     client_socket.close()
                     return

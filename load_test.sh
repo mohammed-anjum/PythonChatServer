@@ -4,10 +4,9 @@
 trap "kill 0" EXIT
 
 # Launch 200 clients, with a delay between each
-for thing in {1..2}
+for thing in {1..200}
 do
     python3 client.py "client_$thing" localhost 12345 test &
-    sleep 0.5  # Delay of 0.1 seconds between launching each client
 done
 
 # Wait for all background processes to finish

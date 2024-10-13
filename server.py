@@ -4,12 +4,14 @@ import sys
 
 from database import *
 
+#test arg for metrics
 def server_program(test):
     initialize_db()
 
     if test:
-        print("Server is in test mode")
+        print("\n\nServer is in test mode")
 
+    #for testing
     count_received_messages = 0
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,8 +28,21 @@ def server_program(test):
 
     the_readable = [server_socket, local_server_socket]
     the_writable = []
+
+    #a dict to keep track messages to send as a queue
     messages_to_send = {}
+    # a dict to keep track of STATE or online clients
     online_sockets = {}
+
+    #helper method to avoid repetition, for closing sockets
+    def close_socket(s):
+        if s in the_readable:
+            the_readable.remove(s)
+        if s in the_writable:
+            the_writable.remove(s)
+        online_sockets.pop(s, None)
+        messages_to_send.pop(s, None)
+        s.close()
 
     while True:
         try:
@@ -40,7 +55,7 @@ def server_program(test):
 
                     client_id = f"{address[0]}:{address[1]}"
                     if test:
-                        print(f"Client {client_id} connected and is testing me")
+                        print(f"\nClient {client_id} connected and is testing me")
                     else:
                         print(f"Client {client_id} connected")
 
@@ -53,23 +68,27 @@ def server_program(test):
                     if test:
                         undelivered_message_info = undelivered_message_info[-20:]
 
+                    #queing messages to be sent
                     for msg_id, sender_client_id, message in undelivered_message_info:
                         messages_to_send[client_socket].append([msg_id, sender_client_id, message])
 
-                    if client_socket not in the_writable:
-                        the_writable.append(client_socket)
+                    #only add to writable if message is there to send
+                    if messages_to_send[client_socket]:
+                        if client_socket not in the_writable:
+                            the_writable.append(client_socket)
 
                 else:
                     try:
                         message = s.recv(1024).decode()
-                        sender_client_id = online_sockets[s]  #f"{s.getpeername()[0]}:{s.getpeername()[1]}"
+                        sender_client_id = online_sockets[s]
 
                         if message:
                             if test:
                                 count_received_messages += 1
+                                # a unique string to show the final message by client to show number of sent messages
                                 if "*_*" in message:
-                                    thisMessage = message.split("*_*")[0]
-                                    print(thisMessage)
+                                    finalMessage = message.split("*_*")[0]
+                                    print(finalMessage)
                             else:
                                 print(f"Received message from client: {sender_client_id} - {message}")
 
@@ -86,31 +105,20 @@ def server_program(test):
 
                         else:
                             print(f"{sender_client_id} disconnected")
-                            if s in the_readable:
-                                the_readable.remove(s)
-                            if s in the_writable:
-                                the_writable.remove(s)
-                            online_sockets.pop(s, None)
-                            messages_to_send.pop(s, None)
-                            s.close()
+                            close_socket(s)
 
                     except Exception as e:
                         print(f"Error receiving data from client: {e}")
-                        if s in the_readable:
-                            the_readable.remove(s)
-                        if s in the_writable:
-                            the_writable.remove(s)
-                        online_sockets.pop(s, None)
-                        messages_to_send.pop(s, None)
-                        s.close()
+                        print(f"I received {count_received_messages} messages so far")
+                        close_socket(s)
 
+            # if no more clients in testing then show all messages received
             if test and len(online_sockets) == 0:
-                print(f"In test mode, 0 clients connected, and i received {count_received_messages} messages")
+                print(f"\nIn test mode, 0 clients connected, TEST END and i received {count_received_messages} messages")
 
-            # Handle sending messages to writable clients
             for s in writable:
                 try:
-                    receiver_client_id = online_sockets[s] #f"{s.getpeername()[0]}:{s.getpeername()[1]}"
+                    receiver_client_id = online_sockets[s]
 
                     if messages_to_send.get(s):
                         oldest_msg_info = messages_to_send[s].pop(0)
@@ -123,19 +131,18 @@ def server_program(test):
 
                 except Exception as e:
                     print(f"Error sending data to client: {e}")
-                    if s in the_writable:
-                        the_writable.remove(s)
-                    online_sockets.pop(s, None)
-                    messages_to_send.pop(s, None)
-                    s.close()
+                    print(f"I received {count_received_messages} messages so far")
+                    close_socket(s)
 
         except KeyboardInterrupt:
             print("I guess I'll just die")
             server_socket.close()
             local_server_socket.close()
             sys.exit(0)
+
         except Exception as e:
             print("SOMETHING IS BAD")
+            print(f"I received {count_received_messages} messages so far")
             print(e)
 
 if __name__ == "__main__":
